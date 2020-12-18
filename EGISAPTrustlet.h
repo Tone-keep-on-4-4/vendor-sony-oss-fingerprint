@@ -1,16 +1,12 @@
 #pragma once
 
-#include "QSEEKeymasterTrustlet.h"
-#include "QSEETrustlet.h"
-
 #include <arpa/inet.h>
 #include <hardware/hw_auth_token.h>
 #include <string.h>
-
 #include <algorithm>
 #include <vector>
-
-namespace egistec::legacy {
+#include "QSEEKeymasterTrustlet.h"
+#include "QSEETrustlet.h"
 
 typedef struct {
     int qty;
@@ -300,8 +296,6 @@ class EGISAPTrustlet : public QSEETrustlet {
    public:
     EGISAPTrustlet();
 
-    bool MatchFirmware();
-
     int SendCommand(API &);
     int SendCommand(API &, Command);
     int SendCommand(Command);
@@ -311,8 +305,6 @@ class EGISAPTrustlet : public QSEETrustlet {
     int SendExtraCommand(ExtraCommand);
 
     // Helper calls:
-    size_t GetBlob(API &, ExtraCommand, void *, size_t);
-    size_t GetBlob(ExtraCommand, void *, size_t);
     uint64_t CallFor64BitResponse(API &, ExtraCommand);
     uint64_t CallFor64BitResponse(ExtraCommand);
 
@@ -351,5 +343,3 @@ class EGISAPTrustlet : public QSEETrustlet {
     int ClearChallenge();
     int SetMasterKey(const MasterKey &);
 };
-
-}  // namespace egistec::legacy

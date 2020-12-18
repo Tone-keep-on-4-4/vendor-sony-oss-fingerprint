@@ -19,9 +19,7 @@
 #include <hidl/HidlSupport.h>
 #include <hidl/HidlTransportSupport.h>
 #include "BiometricsFingerprint.h"
-#include "egistec/current/BiometricsFingerprint.h"
-#include "egistec/legacy/BiometricsFingerprint.h"
-#include "egistec/legacy/EGISAPTrustlet.h"
+#include "BiometricsFingerprint_efp.h"
 
 using android::NO_ERROR;
 using android::sp;
@@ -29,53 +27,30 @@ using android::status_t;
 using android::hardware::configureRpcThreadpool;
 using android::hardware::joinRpcThreadpool;
 using android::hardware::biometrics::fingerprint::V2_1::IBiometricsFingerprint;
-
-using FPCHAL = ::fpc::BiometricsFingerprint;
-using LegacyEgistecHAL = ::egistec::legacy::BiometricsFingerprint;
-using CurrentEgistecHAL = ::egistec::current::BiometricsFingerprint;
+using android::hardware::biometrics::fingerprint::V2_1::implementation::BiometricsFingerprint;
+using android::hardware::biometrics::fingerprint::V2_1::implementation::BiometricsFingerprint_efp;
 
 int main() {
     android::sp<IBiometricsFingerprint> bio;
-
-#if defined(FINGERPRINT_TYPE_EGISTEC)
-    ::egistec::EgisFpDevice dev;
-#endif
-
-#if defined(HAS_LEGACY_EGISTEC)
+#ifdef USE_FPC_NILE
+    EgisFpDevice dev;
     auto type = dev.GetHwId();
-    bool is_old_hal;
 
     switch (type) {
-        case egistec::FpHwId::Egistec:
+        case FpHwId::Egistec:
             ALOGI("Egistec sensor installed");
-
-            {
-                ::egistec::legacy::EGISAPTrustlet trustlet;
-                is_old_hal = trustlet.MatchFirmware();
-                // Scope closes trustlet. While this could be reused,
-                // opt for starting fresh in case the command introduces
-                // unexpected state changes.
-            }
-            if (is_old_hal) {
-                ALOGI("Using legacy Egistec (Nile) HAL");
-                bio = new LegacyEgistecHAL(std::move(dev));
-            } else {
-                ALOGI("Using new Egistec (Ganges+) HAL on Nile");
-                bio = new CurrentEgistecHAL(std::move(dev));
-            }
+            bio = new BiometricsFingerprint_efp(std::move(dev));
             break;
-        case egistec::FpHwId::Fpc:
+        case FpHwId::Fpc:
             ALOGI("FPC sensor installed");
-            bio = new FPCHAL();
+            bio = BiometricsFingerprint::getInstance();
             break;
         default:
             ALOGE("No HAL instance defined for hardware type %d", type);
             return 1;
     }
-#elif defined(FINGERPRINT_TYPE_EGISTEC)
-    bio = new CurrentEgistecHAL(std::move(dev));
 #else
-    bio = new FPCHAL();
+    bio = BiometricsFingerprint::getInstance();
 #endif
 
     configureRpcThreadpool(1, true /*callerWillJoin*/);

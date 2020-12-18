@@ -1,14 +1,10 @@
 #include "EgisFpDevice.h"
-
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
 #include <string.h>
 #include <unistd.h>
-
-#include <FormatException.hpp>
-
-namespace egistec {
+#include "FormatException.hpp"
 
 struct ioctl_cmd {
     int interurpt_mode;
@@ -62,11 +58,10 @@ bool EgisFpDevice::WaitInterrupt(int timeout) const {
     return rc && pfd.revents & POLLIN;
 }
 
-int EgisFpDevice::GetFd() const {
+int EgisFpDevice::GetDescriptor() const {
     return mFd;
 }
 
-#ifdef HAS_LEGACY_EGISTEC
 FpHwId EgisFpDevice::GetHwId() const {
     FpHwId id;
     int rc = ioctl(mFd, ET51X_IOCRHWTYPE, &id);
@@ -74,6 +69,3 @@ FpHwId EgisFpDevice::GetHwId() const {
         throw FormatException("Failed to determine HW id: %d", rc);
     return id;
 }
-#endif
-
-}  // namespace egistec

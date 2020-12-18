@@ -17,15 +17,13 @@
 #define FP_HW_TYPE_EGISTEC 0
 #define FP_HW_TYPE_FPC 1
 
-namespace egistec {
-
 enum class FpHwId {
     Egistec = FP_HW_TYPE_EGISTEC,
     Fpc = FP_HW_TYPE_FPC,
 };
 
 class EgisFpDevice {
-    static constexpr auto DEV_PATH = "/dev/fingerprint";
+    static constexpr auto DEV_PATH = "/dev/fpc1145";
 
     int mFd = -1;
 
@@ -46,11 +44,7 @@ class EgisFpDevice {
      */
     int Disable() const;
     bool WaitInterrupt(int timeout = -1) const;
-    int GetFd() const;
-
-    // TODO: Move/abstract this if we ever get more
-    // platforms with multiple sensor types.
-#ifdef HAS_LEGACY_EGISTEC
+    int GetDescriptor() const;
     /**
      * Retrieve hardware ID from the FPC driver.
      * Currently only has a meaning on the Nile platform,
@@ -59,7 +53,6 @@ class EgisFpDevice {
      * return an error.
      */
     FpHwId GetHwId() const;
-#endif
 };
 
 /**
@@ -69,16 +62,14 @@ class EgisFpDevice {
 template <typename T>
 struct DeviceEnableGuard {
     const T &object;
-    inline DeviceEnableGuard(const T &t) : object(t) {
+    DeviceEnableGuard(const T &t) : object(t) {
         object.Enable();
     }
 
-    inline ~DeviceEnableGuard() {
+    ~DeviceEnableGuard() {
         object.Disable();
     }
 
     DeviceEnableGuard(DeviceEnableGuard &) = delete;
     DeviceEnableGuard &operator=(DeviceEnableGuard &) = delete;
 };
-
-}  // namespace egistec
